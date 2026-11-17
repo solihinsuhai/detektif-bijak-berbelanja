@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detektif Bijak Berbelanja - Matematik Tahun 2</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka (mesra kanak-kanak & bulat) dan Nunito -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+    <!-- Tone.js untuk kesan bunyi interaktif -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['Fredoka', 'sans-serif'],
+                        body: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        pastelBlue: '#E0F2FE',
+                        pastelBlueDark: '#BAE6FD',
+                        pastelYellow: '#FEF9C3',
+                        pastelYellowDark: '#FDE047',
+                        pastelOrange: '#FFEDD5',
+                        pastelOrangeDark: '#FDBA74',
+                        pastelGreen: '#DCFCE7',
+                        pastelGreenDark: '#86EFAC',
+                        detectiveNavy: '#1E3A8A',
+                        detectiveAmber: '#D97706',
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 2.5s infinite',
+                        'wiggle': 'wiggle 0.5s ease-in-out',
+                        'pop': 'pop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                        'float': 'float 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        wiggle: {
+                            '0%, 100%': { transform: 'rotate(-3deg)' },
+                            '50%': { transform: 'rotate(3deg)' },
+                        },
+                        pop: {
+                            '0%': { transform: 'scale(0.85)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-8px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #E0F2FE;
+            background-image: radial-gradient(#BAE6FD 2px, transparent 2px);
+            background-size: 28px 28px;
+            user-select: none;
+        }
+        h1, h2, h3, .font-display {
+            font-family: 'Fredoka', sans-serif;
+        }
+        .btn-3d {
+            transition: all 0.15s ease;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.18);
+        }
+        .btn-3d:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.18);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(30, 58, 138, 0.12), 0 8px 10px -6px rgba(30, 58, 138, 0.08);
+        }
+        .confetti-piece {
+            position: fixed;
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            z-index: 100;
+            pointer-events: none;
+            animation: fall linear forwards;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(105vh) rotate(720deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-800">
+
+    <!-- HEADER / BAR NAVIGASI ATAS -->
+    <header id="top-bar" class="hidden sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-4 border-sky-200 px-4 py-3 shadow-sm">
+        <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <!-- Butang Peta Misi -->
+            <button onclick="navigateTo('map')" class="flex items-center gap-2 bg-sky-100 hover:bg-sky-200 text-sky-900 font-display font-semibold px-4 py-2 rounded-2xl border-2 border-sky-300 transition active:scale-95">
+                <span class="text-xl">🗺️</span>
+                <span class="text-sm sm:text-base">Peta Siasatan</span>
+            </button>
+
+            <!-- Status Kemajuan & Markah -->
+            <div class="flex items-center gap-2 sm:gap-4">
+                <div class="bg-amber-100 border-2 border-amber-300 px-3 sm:px-4 py-1.5 rounded-2xl flex items-center gap-2">
+                    <span class="text-lg">🔍</span>
+                    <span id="header-progress" class="font-display font-bold text-amber-900 text-sm sm:text-base">0 daripada 5 kes selesai</span>
+                </div>
+                <div class="bg-emerald-100 border-2 border-emerald-300 px-3 sm:px-4 py-1.5 rounded-2xl flex items-center gap-2">
+                    <span class="text-lg">⭐</span>
+                    <span id="header-score" class="font-display font-bold text-emerald-900 text-sm sm:text-base">0 / 500</span>
+                </div>
+            </div>
+
+            <!-- Kawalan Bunyi -->
+            <button id="sound-toggle-btn" onclick="toggleSound()" aria-label="Kawal Bunyi" class="flex items-center gap-1.5 bg-orange-100 hover:bg-orange-200 text-orange-900 font-display font-semibold px-3.5 py-2 rounded-2xl border-2 border-orange-300 transition active:scale-95">
+                <span id="sound-icon" class="text-xl">🔊</span>
+                <span id="sound-text" class="hidden sm:inline text-sm">Bunyi: Hidup</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- KANDUNGAN UTAMA APLIKASI -->
+    <main class="flex-grow flex items-center justify-center p-4 sm:p-6">
+        <div class="w-full max-w-5xl">
+
+            <!-- ========================================== -->
+            <!-- SKRIN 1: HALAMAN UTAMA (WELCOME PAGE)      -->
+            <!-- ========================================== -->
+            <section id="screen-welcome" class="animate-pop bg-white rounded-3xl border-4 border-sky-300 card-shadow p-6 sm:p-10 text-center relative overflow-hidden">
+                <!-- Hiasan Latar Belakang -->
+                <div class="absolute -top-6 -left-6 text-6xl opacity-20 rotate-12 pointer-events-none">🔍</div>
+                <div class="absolute -bottom-6 -right-6 text-6xl opacity-20 -rotate-12 pointer-events-none">💰</div>
+
+                <!-- Butang Bunyi di Skrin Utama -->
+                <div class="flex justify-end mb-2">
+                    <button onclick="toggleSound()" class="flex items-center gap-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 font-display font-semibold px-4 py-2 rounded-2xl border-2 border-amber-300 transition">
+                        <span class="sound-icon-sync text-xl">🔊</span>
+                        <span class="sound-text-sync text-sm">Bunyi: Hidup</span>
+                    </button>
+                </div>
+
+                <!-- Lencana Standard Pembelajaran -->
+                <div class="inline-block bg-sky-100 text-sky-900 font-bold text-xs sm:text-sm px-4 py-1.5 rounded-full border-2 border-sky-300 mb-4">
+                    Matematik Tahun 2 • Standard 4.7.1: Penyelesaian Masalah Wang
+                </div>
+
+                <!-- Tajuk Utama -->
+                <h1 class="text-3xl sm:text-5xl md:text-6xl font-bold text-detectiveNavy tracking-wide mb-2 drop-shadow-sm">
+                    DETEKTIF BIJAK BERBELANJA
+                </h1>
+                <p class="text-lg sm:text-2xl font-display font-semibold text-amber-600 mb-6">
+                    "Misi Menyelesaikan Lima Kes Pembelian!"
+                </p>
+
+                <!-- Ilustrasi Watak Detektif Cilik & Pembantu -->
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-6 my-6">
+                    <!-- SVG Detektif Cilik -->
+                    <div class="animate-float bg-pastelYellow p-4 rounded-3xl border-4 border-amber-300 shadow-inner">
+                        <svg class="w-44 h-44 sm:w-52 sm:h-52 mx-auto" viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Latar Bulatan -->
+                            <circle cx="110" cy="110" r="95" fill="#FEF08A"/>
+                            <!-- Badan Kot Detektif -->
+                            <path d="M55 195C55 160 78 145 110 145C142 145 165 160 165 195" fill="#D97706"/>
+                            <path d="M90 145L110 175L130 145" fill="#FEF3C7"/>
+                            <!-- Kolar Kot -->
+                            <path d="M85 145L75 170L98 165L90 145Z" fill="#B45309"/>
+                            <path d="M135 145L145 170L122 165L135 145Z" fill="#B45309"/>
+                            <!-- Kepala -->
+                            <circle cx="110" cy="105" r="42" fill="#FDE68A"/>
+                            <!-- Telinga -->
+                            <circle cx="67" cy="108" r="8" fill="#FCD34D"/>
+                            <circle cx="153" cy="108" r="8" fill="#FCD34D"/>
+                            <!-- Mata & Senyuman -->
+                            <circle cx="95" cy="102" r="5" fill="#1E293B"/>
+                            <circle cx="125" cy="102" r="5" fill="#1E293B"/>
+                            <circle cx="97" cy="100" r="1.5" fill="white"/>
+                            <circle cx="127" cy="100" r="1.5" fill="white"/>
+                            <path d="M98 120C103 127 117 127 122 120" stroke="#1E293B" stroke-width="4" stroke-linecap="round"/>
+                            <!-- Pipi Merah -->
+                            <ellipse cx="84" cy="114" rx="6" ry="3.5" fill="#FCA5A5"/>
+                            <ellipse cx="136" cy="114" rx="6" ry="3.5" fill="#FCA5A5"/>
+                            <!-- Topi Detektif -->
+                            <path d="M62 76C62 50 83 36 110 36C137 36 158 50 158 76H62Z" fill="#92400E"/>
+                            <ellipse cx="110" cy="76" rx="64" ry="11" fill="#78350F"/>
+                            <rect x="65" y="66" width="90" height="8" rx="4" fill="#F59E0B"/>
+                            <!-- Buku Nota Siasatan (Kiri) -->
+                            <rect x="42" y="148" width="34" height="42" rx="5" transform="rotate(-10 42 148)" fill="#38BDF8" stroke="#0284C7" stroke-width="3"/>
+                            <line x1="50" y1="158" x2="68" y2="155" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                            <line x1="52" y1="167" x2="70" y2="164" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                            <!-- Kanta Pembesar (Kanan) -->
+                            <line x1="158" y1="152" x2="182" y2="178" stroke="#78350F" stroke-width="8" stroke-linecap="round"/>
+                            <circle cx="148" cy="140" r="22" fill="#E0F2FE" stroke="#0284C7" stroke-width="6"/>
+                            <path d="M138 132C141 127 148 125 154 128" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                        </svg>
+                        <span class="inline-block mt-1 bg-amber-500 text-white font-display font-bold text-sm px-3 py-1 rounded-full">Detektif Cilik</span>
+                    </div>
+
+                    <!-- Kotak Ucapan Pengenalan -->
+                    <div class="bg-pastelBlue border-4 border-sky-300 rounded-3xl p-5 sm:p-7 max-w-lg text-left relative">
+                        <div class="flex items-center gap-3 mb-3">
+                            <span class="text-3xl bg-white p-2 rounded-2xl border-2 border-sky-200">🦉</span>
+                            <div>
+                                <h3 class="font-display font-bold text-sky-900 text-lg">Pembantu Bijak: Cikgu Burung Hantu</h3>
+                                <p class="text-xs font-bold text-sky-600">Penasihat Siasatan Matematik</p>
+                            </div>
+                        </div>
+                        <p class="text-base sm:text-xl font-bold text-slate-800 leading-relaxed">
+                            "Selamat datang, Detektif Cilik! Hari ini kamu mempunyai lima kes pembelian untuk diselesaikan. Baca setiap situasi dengan teliti, lakukan pengiraan dan pilih jawapan yang paling tepat!"
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Butang Mula Misi -->
+                <div class="mt-8">
+                    <button onclick="startMission()" class="btn-3d bg-emerald-500 hover:bg-emerald-600 text-white font-display font-bold text-xl sm:text-3xl px-8 sm:px-12 py-4 sm:py-5 rounded-3xl border-4 border-emerald-700 inline-flex items-center gap-3 cursor-pointer">
+                        <span>🎯 MULAKAN MISI</span>
+                    </button>
+                </div>
+            </section>
+
+
+            <!-- ========================================== -->
+            <!-- SKRIN 2: PETA SIASATAN (INVESTIGATION MAP) -->
+            <!-- ========================================== -->
+            <section id="screen-map" class="hidden animate-pop">
+                <div class="bg-white rounded-3xl border-4 border-sky-300 card-shadow p-6 sm:p-8">
+                    <!-- Tajuk & Panduan Pembantu -->
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-4 border-b-4 border-dashed border-sky-200 pb-6 mb-6">
+                        <div class="text-center md:text-left">
+                            <h2 class="text-2xl sm:text-4xl font-bold text-detectiveNavy flex items-center justify-center md:justify-start gap-2">
+                                <span>🗺️</span> Papan Siasatan Kes
+                            </h2>
+                            <p class="text-slate-600 font-bold text-base sm:text-lg mt-1">
+                                Selesaikan kes mengikut urutan dari Kes 1 hingga Kes 5!
+                            </p>
+                        </div>
+                        
+                        <!-- Kad Pembantu -->
+                        <div class="bg-pastelYellow border-2 border-amber-300 rounded-2xl px-4 py-3 flex items-center gap-3 max-w-md">
+                            <span class="text-3xl">🦉</span>
+                            <p id="map-assistant-msg" class="text-sm sm:text-base font-bold text-amber-950">
+                                Klik pada kes yang terbuka untuk memulakan siasatan kamu!
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Grid 5 Kad Kes -->
+                    <div id="cases-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <!-- Kad kes dijana secara dinamik oleh JavaScript -->
+                    </div>
+
+                    <!-- Butang Lihat Pencapaian jika semua kes selesai -->
+                    <div id="map-celebration-banner" class="hidden mt-8 bg-pastelGreen border-4 border-emerald-400 rounded-3xl p-6 text-center">
+                        <h3 class="text-2xl font-bold text-emerald-900 mb-2">🎉 Tahniah! Semua 5 Kes Telah Selesai!</h3>
+                        <p class="text-emerald-800 font-bold mb-4">Kamu telah berjaya menyelesaikan semua misi pembelian hari ini.</p>
+                        <button onclick="navigateTo('celebration')" class="btn-3d bg-amber-500 hover:bg-amber-600 text-white font-display font-bold text-xl px-8 py-3.5 rounded-2xl border-4 border-amber-700">
+                            🏆 LIHAT PENCAPAIAN
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ========================================== -->
+            <!-- SKRIN 3: CABARAN SIASATAN (CHALLENGES)     -->
+            <!-- ========================================== -->
+            <section id="screen-challenge" class="hidden animate-pop">
+                <div class="bg-white rounded-3xl border-4 border-amber-300 card-shadow p-5 sm:p-8">
+                    
+                    <!-- Bar Atas Kad Kes -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-5 pb-4 border-b-4 border-amber-100">
+                        <div class="flex items-center gap-3">
+                            <span id="challenge-badge" class="bg-amber-500 text-white font-display font-bold text-lg sm:text-xl px-4 py-1.5 rounded-2xl shadow-sm">
+                                KES 1
+                            </span>
+                            <h2 id="challenge-title" class="text-2xl sm:text-3xl font-bold text-detectiveNavy">
+                                Wang Ali
+                            </h2>
+                        </div>
+                        <div id="challenge-status-pill" class="bg-sky-100 text-sky-900 font-bold text-sm px-4 py-1.5 rounded-full border-2 border-sky-300">
+                            Sedang Menyiasat 🔍
+                        </div>
+                    </div>
+
+                    <!-- Kandungan Utama: Ilustrasi + Situasi & Soalan -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        
+                        <!-- Kolum Kiri: Ilustrasi Situasi Pembelian -->
+                        <div class="lg:col-span-5 bg-pastelBlue/70 border-4 border-sky-200 rounded-3xl p-4 flex flex-col items-center justify-center">
+                            <div id="challenge-illustration" class="w-full max-w-[310px] mx-auto">
+                                <!-- SVG Ilustrasi Khusus Kes akan dipaparkan di sini -->
+                            </div>
+                            <div class="mt-3 bg-white/90 px-4 py-1.5 rounded-xl border-2 border-sky-200 text-center">
+                                <span id="challenge-caption" class="text-xs sm:text-sm font-extrabold text-sky-900">Bukti Siasatan #1</span>
+                            </div>
+                        </div>
+
+                        <!-- Kolum Kanan: Situasi, Soalan & Pilihan Jawapan -->
+                        <div class="lg:col-span-7 flex flex-col gap-4">
+                            
+                            <!-- Kotak Situasi -->
+                            <div class="bg-pastelYellow border-3 border-amber-300 rounded-2xl p-4 sm:p-5 relative">
+                                <div class="inline-flex items-center gap-1.5 bg-amber-400 text-amber-950 font-display font-bold text-xs sm:text-sm px-3 py-1 rounded-lg mb-2">
+                                    <span>📋</span> SITUASI PEMBELIAN
+                                </div>
+                                <p id="challenge-scenario" class="text-lg sm:text-xl font-bold text-slate-800 leading-relaxed">
+                                    <!-- Teks situasi -->
+                                </p>
+                            </div>
+
+                            <!-- Kotak Soalan -->
+                            <div class="bg-pastelOrange border-3 border-orange-300 rounded-2xl p-4 sm:p-5">
+                                <div class="inline-flex items-center gap-1.5 bg-orange-400 text-white font-display font-bold text-xs sm:text-sm px-3 py-1 rounded-lg mb-2">
+                                    <span>❓</span> SOALAN SIASATAN
+                                </div>
+                                <p id="challenge-question" class="text-lg sm:text-xl font-extrabold text-orange-950 leading-snug">
+                                    <!-- Teks soalan -->
+                                </p>
+                            </div>
+
+                            <!-- Pilihan Jawapan (A, B, C, D) -->
+                            <div id="options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+                                <!-- 4 Butang Pilihan dijana oleh JavaScript -->
+                            </div>
+
+                            <!-- Butang Semak Jawapan -->
+                            <div class="mt-2 flex flex-wrap items-center justify-between gap-3">
+                                <button id="btn-submit-answer" onclick="checkAnswer()" disabled class="btn-3d w-full sm:w-auto flex-grow bg-sky-500 hover:bg-sky-600 disabled:bg-slate-300 disabled:border-slate-400 disabled:cursor-not-allowed text-white font-display font-bold text-xl px-8 py-4 rounded-2xl border-4 border-sky-700 transition">
+                                    🔎 SEMAK JAWAPAN
+                                </button>
+                            </div>
+
+                            <!-- Kotak Maklum Balas Automatik -->
+                            <div id="feedback-box" class="hidden animate-pop rounded-3xl p-5 border-4 mt-2 shadow-md">
+                                <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                                    <div id="feedback-icon" class="shrink-0">🎉</div>
+                                    <div class="flex-grow text-center sm:text-left">
+                                        <h4 id="feedback-heading" class="font-display font-bold text-xl sm:text-2xl mb-1.5">Hebat!</h4>
+                                        <p id="feedback-encouragement" class="hidden font-extrabold text-purple-900 text-base sm:text-lg mb-2 leading-snug"></p>
+                                        <div id="feedback-text-wrapper">
+                                            <p id="feedback-text" class="font-bold text-base sm:text-lg leading-snug"></p>
+                                        </div>
+                                        
+                                        <!-- Langkah Pengiraan (Hanya dipaparkan apabila jawapan BETUL) -->
+                                        <div id="calculation-box" class="hidden mt-3 bg-white/80 rounded-xl p-3 border-2 border-emerald-300">
+                                            <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-800 block mb-1">💡 Langkah Pengiraan:</span>
+                                            <p id="calculation-steps" class="font-display font-bold text-emerald-950 text-base sm:text-lg"></p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Butang Kes Seterusnya (Hanya muncul selepas menjawab dengan BETUL) -->
+                                <div id="next-action-container" class="hidden mt-4 pt-3 border-t-2 border-emerald-300/60 flex justify-end">
+                                    <button id="btn-next-case" onclick="goToNextCase()" class="btn-3d bg-emerald-500 hover:bg-emerald-600 text-white font-display font-bold text-lg sm:text-xl px-7 py-3 rounded-2xl border-4 border-emerald-700 flex items-center gap-2">
+                                        <span id="btn-next-text">KES SETERUSNYA ➡️</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ========================================== -->
+            <!-- SKRIN 5: SKRIN PERAYAAN (MISI BERJAYA!)    -->
+            <!-- ========================================== -->
+            <section id="screen-celebration" class="hidden animate-pop">
+                <div class="bg-white rounded-3xl border-4 border-emerald-400 card-shadow p-6 sm:p-10 text-center relative overflow-hidden">
+                    
+                    <!-- Lencana Tamat -->
+                    <div class="inline-block bg-amber-100 text-amber-900 font-display font-bold text-sm sm:text-base px-5 py-1.5 rounded-full border-2 border-amber-400 mb-3">
+                        🏆 SIJIL PENGHARGAAN DETEKTIF CILIK 🏆
+                    </div>
+
+                    <h1 class="text-3xl sm:text-5xl font-bold text-emerald-700 mb-2">
+                        MISI BERJAYA!
+                    </h1>
+                    <p class="text-lg sm:text-xl font-display font-semibold text-amber-600 mb-6">
+                        Semua Lima Kes Pembelian Telah Selesai Disiasat!
+                    </p>
+
+                    <!-- Watak Detektif Meraikan Kejayaan -->
+                    <div class="my-4 flex justify-center">
+                        <div class="animate-bounce-slow bg-pastelGreen p-4 rounded-full border-4 border-emerald-400 shadow-md">
+                            <svg class="w-36 h-36 sm:w-44 sm:h-44" viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="110" cy="110" r="95" fill="#BBF7D0"/>
+                                <!-- Bintang Hiasan -->
+                                <path d="M40 55L44 65L55 66L46 73L49 84L40 78L31 84L34 73L25 66L36 65L40 55Z" fill="#FACC15"/>
+                                <path d="M180 50L183 58L192 59L185 65L187 74L180 69L173 74L175 65L168 59L177 58L180 50Z" fill="#FACC15"/>
+                                <!-- Badan -->
+                                <path d="M55 195C55 160 78 145 110 145C142 145 165 160 165 195" fill="#D97706"/>
+                                <path d="M90 145L110 175L130 145" fill="#FEF3C7"/>
+                                <!-- Tangan Sorak -->
+                                <path d="M58 165L35 125" stroke="#D97706" stroke-width="14" stroke-linecap="round"/>
+                                <circle cx="33" cy="120" r="9" fill="#FDE68A"/>
+                                <path d="M162 165L185 125" stroke="#D97706" stroke-width="14" stroke-linecap="round"/>
+                                <circle cx="187" cy="120" r="9" fill="#FDE68A"/>
+                                <!-- Kepala -->
+                                <circle cx="110" cy="105" r="42" fill="#FDE68A"/>
+                                <!-- Mata Gembira -->
+                                <path d="M88 103C91 97 99 97 102 103" stroke="#1E293B" stroke-width="4" stroke-linecap="round"/>
+                                <path d="M118 103C121 97 129 97 132 103" stroke="#1E293B" stroke-width="4" stroke-linecap="round"/>
+                                <!-- Mulut Ketawa Gembira -->
+                                <path d="M95 116C95 128 125 128 125 116H95Z" fill="#EF4444" stroke="#1E293B" stroke-width="3"/>
+                                <!-- Topi Detektif -->
+                                <path d="M62 76C62 50 83 36 110 36C137 36 158 50 158 76H62Z" fill="#92400E"/>
+                                <ellipse cx="110" cy="76" rx="64" ry="11" fill="#78350F"/>
+                                <rect x="65" y="66" width="90" height="8" rx="4" fill="#F59E0B"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Kad Statistik Markah & Kes -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto my-6">
+                        <div class="bg-pastelYellow border-4 border-amber-300 rounded-2xl p-4">
+                            <span class="text-sm font-extrabold text-amber-800 uppercase">Markah Akhir Kamu</span>
+                            <div id="final-score-display" class="text-4xl sm:text-5xl font-display font-bold text-amber-600 mt-1">
+                                500 / 500
+                            </div>
+                        </div>
+                        <div class="bg-pastelBlue border-4 border-sky-300 rounded-2xl p-4">
+                            <span class="text-sm font-extrabold text-sky-800 uppercase">Kes Diselesaikan</span>
+                            <div id="final-cases-display" class="text-4xl sm:text-5xl font-display font-bold text-sky-700 mt-1">
+                                5 / 5 Kes
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mesej Motivasi Wajib -->
+                    <div class="bg-emerald-50 border-3 border-emerald-300 rounded-2xl p-5 sm:p-6 max-w-2xl mx-auto mb-8">
+                        <p class="text-base sm:text-xl font-bold text-emerald-950 leading-relaxed">
+                            "Tahniah, Detektif Cilik! Kamu telah berjaya menyelesaikan kelima-lima kes pembelian. Sekarang kamu lebih bijak mengira jumlah harga, menentukan baki wang dan merancang perbelanjaan!"
+                        </p>
+                    </div>
+
+                    <!-- Dua Butang Utama Skrin Akhir -->
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <button onclick="openAchievementsModal()" class="btn-3d w-full sm:w-auto bg-sky-500 hover:bg-sky-600 text-white font-display font-bold text-xl px-8 py-4 rounded-2xl border-4 border-sky-700 flex items-center justify-center gap-2">
+                            <span>🏅 LIHAT PENCAPAIAN</span>
+                        </button>
+                        <button onclick="resetMission()" class="btn-3d w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white font-display font-bold text-xl px-8 py-4 rounded-2xl border-4 border-amber-700 flex items-center justify-center gap-2">
+                            <span>🔄 ULANGI MISI</span>
+                        </button>
+                    </div>
+
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- MODAL PENCAPAIAN (Untuk butang "LIHAT PENCAPAIAN") -->
+    <div id="achievements-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="animate-pop bg-white rounded-3xl border-4 border-sky-400 max-w-2xl w-full p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b-4 border-sky-100 pb-4 mb-5">
+                <h3 class="text-2xl sm:text-3xl font-bold text-detectiveNavy flex items-center gap-2">
+                    <span>🏅</span> Rekod Pencapaian Detektif
+                </h3>
+                <button onclick="closeAchievementsModal()" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold w-10 h-10 rounded-full text-xl flex items-center justify-center border-2 border-rose-300">
+                    ✕
+                </button>
+            </div>
+
+            <div id="achievements-list" class="space-y-3 mb-6">
+                <!-- Senarai pencapaian setiap kes dijana di sini -->
+            </div>
+
+            <div class="bg-pastelYellow border-2 border-amber-300 rounded-2xl p-4 text-center mb-5">
+                <p class="font-bold text-amber-950 text-base sm:text-lg">
+                    🌟 Pangkat Dianugerahkan: <span class="text-amber-700 underline">Detektif Utama Bijak Wang</span>
+                </p>
+            </div>
+
+            <div class="text-center">
+                <button onclick="closeAchievementsModal()" class="btn-3d bg-emerald-500 hover:bg-emerald-600 text-white font-display font-bold text-lg px-8 py-3 rounded-2xl border-4 border-emerald-700">
+                    TUTUP PAPARAN
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- LOGIK APLIKASI & DATA KES (JAVASCRIPT)     -->
+    <!-- ========================================== -->
+    <script>
+        // Data 5 Kes Siasatan mengikut spesifikasi tepat kurikulum & prompt
+        const CASES_DATA = [
+            {
+                id: 1,
+                numberLabel: "Kes 1",
+                title: "Wang Ali",
+                shortDesc: "Kira harga kasut & stoking serta baki wang Ali.",
+                scenario: "Ali mempunyai wang sebanyak RM25. Dia ingin membeli sepasang kasut sekolah berharga RM18 dan sepasang stoking berharga RM4.",
+                question: "Adakah wang Ali mencukupi untuk membeli kedua-dua barang tersebut? Berapakah baki wang Ali?",
+                options: [
+                    { key: "A", text: "Tidak cukup, kurang RM3." },
+                    { key: "B", text: "Ya, baki RM3." },
+                    { key: "C", text: "Ya, baki RM5." },
+                    { key: "D", text: "Ya, baki RM7." }
+                ],
+                correctAnswer: "B",
+                calculation: "RM18 + RM4 = RM22\nRM25 - RM22 = RM3",
+                correctFeedback: "Hebat! Jumlah harga ialah RM22. Wang Ali mencukupi dan bakinya ialah RM3.",
+                incorrectFeedback: "Cuba lagi! Jumlahkan harga kasut dan stoking dahulu. Kemudian, tolak jumlah itu daripada RM25.",
+                caption: "Ali melihat kasut sekolah (RM18) dan stoking (RM4)",
+                svg: `
+                <svg viewBox="0 0 300 230" class="w-full h-auto rounded-2xl shadow-sm" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="aliBg" x1="0" y1="0" x2="0" y2="230" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#E0F2FE"/>
+                            <stop offset="65%" stop-color="#FEF9C3"/>
+                            <stop offset="100%" stop-color="#FDE68A"/>
+                        </linearGradient>
+                        <linearGradient id="shoeGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#334155"/>
+                            <stop offset="100%" stop-color="#0F172A"/>
+                        </linearGradient>
+                    </defs>
+                    <!-- Latar Belakang Kedai Cerah -->
+                    <rect width="300" height="230" rx="20" fill="url(#aliBg)"/>
+                    <!-- Tingkap Kedai & Cahaya -->
+                    <rect x="145" y="18" width="135" height="82" rx="12" fill="#BAE6FD" stroke="#FFFFFF" stroke-width="4"/>
+                    <path d="M160 18L195 100H225L190 18H160Z" fill="#FFFFFF" fill-opacity="0.45"/>
+                    <circle cx="250" cy="40" r="14" fill="#FEF08A"/>
+                    <!-- Rak Hiasan Latar -->
+                    <rect x="20" y="32" width="90" height="10" rx="5" fill="#FDBA74"/>
+                    <rect x="30" y="16" width="24" height="16" rx="4" fill="#60A5FA"/>
+                    <rect x="62" y="14" width="32" height="18" rx="4" fill="#34D399"/>
+
+                    <!-- Meja / Rak Paparan Barangan -->
+                    <rect x="130" y="162" width="155" height="52" rx="10" fill="#D97706"/>
+                    <rect x="125" y="154" width="165" height="14" rx="7" fill="#F59E0B" stroke="#B45309" stroke-width="2"/>
+                    <!-- Kotak Kasut -->
+                    <rect x="142" y="118" width="76" height="36" rx="6" fill="#FDE68A" stroke="#D97706" stroke-width="2"/>
+                    <rect x="139" y="114" width="82" height="9" rx="4" fill="#FCD34D" stroke="#D97706" stroke-width="2"/>
+
+                    <!-- Sepasang Kasut Sekolah Hitam Realistik -->
+                    <!-- Kasut Kiri (Belakang) -->
+                    <ellipse cx="164" cy="113" rx="20" ry="5" fill="#000000" fill-opacity="0.18"/>
+                    <path d="M145 111C145 99 152 91 161 91L168 96C175 97 183 101 184 109C184 112 180 113 175 113H149C146 113 145 112 145 111Z" fill="#1E293B" stroke="#0F172A" stroke-width="2"/>
+                    <path d="M146 111H183" stroke="#64748B" stroke-width="2.5" stroke-linecap="round"/>
+                    <!-- Kasut Kanan (Hadapan) -->
+                    <ellipse cx="186" cy="116" rx="22" ry="5.5" fill="#000000" fill-opacity="0.22"/>
+                    <path d="M164 114C164 101 171 92 181 92L189 98C197 99 206 103 207 111C207 115 203 116 197 116H168C165 116 164 115 164 114Z" fill="url(#shoeGrad)" stroke="#0F172A" stroke-width="2"/>
+                    <!-- Tali Kasut & Kilauan -->
+                    <path d="M179 97L185 95M183 101L189 99" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M192 104C196 104 200 106 201 109" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M165 114H206" stroke="#475569" stroke-width="2.5" stroke-linecap="round"/>
+
+                    <!-- Sepasang Stoking Putih Berjalur Biru -->
+                    <ellipse cx="248" cy="152" rx="24" ry="5" fill="#000000" fill-opacity="0.16"/>
+                    <!-- Stoking 1 -->
+                    <path d="M230 106H246V134C246 143 239 149 230 149H223C218 149 218 141 223 139L230 135V106Z" fill="#FFFFFF" stroke="#94A3B8" stroke-width="2"/>
+                    <rect x="231" y="111" width="14" height="3.5" fill="#2563EB"/>
+                    <rect x="231" y="117" width="14" height="3.5" fill="#3B82F6"/>
+                    <!-- Stoking 2 -->
+                    <path d="M254 108H270V136C270 145 263 151 254 151H247C242 151 242 143 247 141L254 137V108Z" fill="#F8FAFC" stroke="#94A3B8" stroke-width="2"/>
+                    <rect x="255" y="113" width="14" height="3.5" fill="#2563EB"/>
+                    <rect x="255" y="119" width="14" height="3.5" fill="#3B82F6"/>
+
+                    <!-- Tanda Harga Jelas: RM18 & RM4 -->
+                    <line x1="176" y1="74" x2="176" y2="90" stroke="#B45309" stroke-width="3"/>
+                    <rect x="148" y="48" width="56" height="28" rx="8" fill="#FACC15" stroke="#B45309" stroke-width="2.5"/>
+                    <text x="176" y="67" text-anchor="middle" fill="#78350F" font-family="Fredoka" font-weight="bold" font-size="16">RM18</text>
+
+                    <line x1="250" y1="86" x2="250" y2="104" stroke="#B45309" stroke-width="3"/>
+                    <rect x="225" y="60" width="50" height="28" rx="8" fill="#FACC15" stroke="#B45309" stroke-width="2.5"/>
+                    <text x="250" y="79" text-anchor="middle" fill="#78350F" font-family="Fredoka" font-weight="bold" font-size="16">RM4</text>
+
+                    <!-- Watak Ali: Murid Lelaki Melayu Beruniform Sekolah Biru & Beg Galas -->
+                    <!-- Beg Galas Sekolah (Belakang) -->
+                    <rect x="16" y="128" width="32" height="58" rx="14" fill="#0284C7" stroke="#0369A1" stroke-width="2.5"/>
+                    <rect x="18" y="148" width="18" height="24" rx="6" fill="#38BDF8"/>
+                    <!-- Badan & Baju Uniform Sekolah Biru -->
+                    <path d="M32 215C32 174 48 150 74 150C100 150 116 174 116 215H32Z" fill="#3B82F6" stroke="#1D4ED8" stroke-width="2.5"/>
+                    <!-- Kolar & Poket Baju Sekolah -->
+                    <path d="M58 150L74 166L90 150" fill="#93C5FD" stroke="#1D4ED8" stroke-width="2"/>
+                    <rect x="82" y="172" width="16" height="18" rx="3" fill="#60A5FA" stroke="#1D4ED8" stroke-width="1.5"/>
+                    <!-- Tali Beg Galas -->
+                    <path d="M46 152C44 170 44 188 48 205" stroke="#0369A1" stroke-width="6" stroke-linecap="round"/>
+                    <!-- Leher & Kepala Ekspresif -->
+                    <rect x="66" y="138" width="16" height="16" rx="6" fill="#FCD34D"/>
+                    <circle cx="74" cy="106" r="34" fill="#FDE68A" stroke="#F59E0B" stroke-width="2"/>
+                    <!-- Telinga -->
+                    <circle cx="40" cy="108" r="6.5" fill="#FCD34D"/>
+                    <circle cx="108" cy="108" r="6.5" fill="#FCD34D"/>
+                    <!-- Rambut Hitam Kemas -->
+                    <path d="M40 102C39 74 58 64 78 66C96 67 109 80 108 102C104 88 94 83 82 84C68 85 52 84 40 102Z" fill="#1E293B"/>
+                    <!-- Kening, Mata Bersinar & Senyuman Ceria -->
+                    <path d="M56 95C60 92 65 92 68 95" stroke="#1E293B" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M81 95C84 92 89 92 93 95" stroke="#1E293B" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="62" cy="104" r="4.5" fill="#1E293B"/>
+                    <circle cx="63.5" cy="102.5" r="1.6" fill="#FFFFFF"/>
+                    <circle cx="87" cy="104" r="4.5" fill="#1E293B"/>
+                    <circle cx="88.5" cy="102.5" r="1.6" fill="#FFFFFF"/>
+                    <ellipse cx="52" cy="113" rx="5" ry="3" fill="#FCA5A5"/>
+                    <ellipse cx="97" cy="113" rx="5" ry="3" fill="#FCA5A5"/>
+                    <path d="M64 117C67 126 82 126 85 117H64Z" fill="#EF4444" stroke="#1E293B" stroke-width="2"/>
+
+                    <!-- Tangan Memegang Wang RM25 -->
+                    <rect x="62" y="168" width="76" height="36" rx="7" transform="rotate(-5 62 168)" fill="#22C55E" stroke="#15803D" stroke-width="3"/>
+                    <rect x="68" y="173" width="64" height="26" rx="4" transform="rotate(-5 68 173)" stroke="#86EFAC" stroke-width="1.5" stroke-dasharray="4 2"/>
+                    <text x="100" y="191" text-anchor="middle" transform="rotate(-5 100 191)" fill="#FFFFFF" font-family="Fredoka" font-weight="bold" font-size="17">RM25</text>
+                    <!-- Jari Tangan -->
+                    <circle cx="63" cy="186" r="7" fill="#FDE68A" stroke="#D97706" stroke-width="2"/>
+                    <circle cx="137" cy="180" r="7" fill="#FDE68A" stroke="#D97706" stroke-width="2"/>
+                </svg>`
+            },
+            {
+                id: 2,
+                numberLabel: "Kes 2",
+                title: "Baki Wang Siti",
+                shortDesc: "Siti membayar RM20 untuk bekas makanan RM14.",
+                scenario: "Siti membeli sebuah bekas makanan berharga RM14. Dia membayar menggunakan wang RM20.",
+                question: "Berapakah baki wang yang akan diterima oleh Siti?",
+                options: [
+                    { key: "A", text: "RM4" },
+                    { key: "B", text: "RM5" },
+                    { key: "C", text: "RM6" },
+                    { key: "D", text: "RM8" }
+                ],
+                correctAnswer: "C",
+                calculation: "RM20 - RM14 = RM6",
+                correctFeedback: "Syabas! Kamu berjaya mengira baki wang Siti dengan tepat.",
+                incorrectFeedback: "Jangan risau! Untuk mencari baki wang, tolak harga barang daripada wang yang dibayar.",
+                caption: "Siti membeli bekas makanan (RM14) dengan wang RM20",
+                svg: `
+                <svg viewBox="0 0 300 230" class="w-full h-auto rounded-2xl shadow-sm" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="sitiBg" x1="0" y1="0" x2="0" y2="230" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#FEF9C3"/>
+                            <stop offset="60%" stop-color="#E0F2FE"/>
+                            <stop offset="100%" stop-color="#BAE6FD"/>
+                        </linearGradient>
+                    </defs>
+                    <!-- Latar Pasar Raya Cerah & Mesra -->
+                    <rect width="300" height="230" rx="20" fill="url(#sitiBg)"/>
+                    <!-- Rak Barangan Pasar Raya (Latar Lembut) -->
+                    <rect x="16" y="24" width="110" height="92" rx="10" fill="#FFFFFF" fill-opacity="0.65"/>
+                    <rect x="24" y="48" width="94" height="5" rx="2" fill="#CBD5E1"/>
+                    <rect x="24" y="80" width="94" height="5" rx="2" fill="#CBD5E1"/>
+                    <rect x="30" y="32" width="18" height="16" rx="4" fill="#93C5FD"/>
+                    <rect x="54" y="34" width="22" height="14" rx="4" fill="#FDE047"/>
+                    <rect x="82" y="30" width="20" height="18" rx="4" fill="#86EFAC"/>
+                    <rect x="32" y="62" width="24" height="18" rx="4" fill="#FDBA74"/>
+                    <rect x="64" y="64" width="26" height="16" rx="4" fill="#F9A8D4"/>
+
+                    <rect x="174" y="24" width="110" height="92" rx="10" fill="#FFFFFF" fill-opacity="0.65"/>
+                    <rect x="182" y="48" width="94" height="5" rx="2" fill="#CBD5E1"/>
+                    <rect x="182" y="80" width="94" height="5" rx="2" fill="#CBD5E1"/>
+                    <rect x="190" y="32" width="20" height="16" rx="4" fill="#86EFAC"/>
+                    <rect x="218" y="34" width="24" height="14" rx="4" fill="#93C5FD"/>
+                    <rect x="192" y="64" width="22" height="16" rx="4" fill="#FDE047"/>
+                    <rect x="222" y="62" width="26" height="18" rx="4" fill="#C4B5FD"/>
+
+                    <!-- Meja Kaunter Pasar Raya -->
+                    <rect x="12" y="172" width="276" height="46" rx="10" fill="#FDE68A"/>
+                    <rect x="10" y="164" width="280" height="14" rx="7" fill="#FBBF24" stroke="#D97706" stroke-width="2"/>
+
+                    <!-- Watak Siti: Murid Perempuan Melayu Bertudung Pastel Kemas & Mesra -->
+                    <!-- Badan Baju Merah Jambu Pastel -->
+                    <path d="M36 164C36 136 52 122 76 122C100 122 116 136 116 164H36Z" fill="#F472B6" stroke="#DB2777" stroke-width="2"/>
+                    <!-- Tudung Pastel Lembut (Ungu/Merah Jambu Cair) -->
+                    <path d="M38 96C38 66 56 52 76 52C96 52 114 66 114 96C114 124 104 146 76 146C48 146 38 124 38 96Z" fill="#F3E8FF" stroke="#C084FC" stroke-width="2.5"/>
+                    <!-- Lipatan Tudung Kemas -->
+                    <path d="M46 112C56 124 96 124 106 112" stroke="#D8B4FE" stroke-width="2.5" stroke-linecap="round"/>
+                    <!-- Wajah Comel & Mesra -->
+                    <circle cx="76" cy="94" r="26" fill="#FDE68A"/>
+                    <!-- Kening, Mata Bulat Mesra & Senyuman Semula Jadi -->
+                    <path d="M61 85C64 82 69 82 72 85" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M80 85C83 82 88 82 91 85" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="66" cy="92" r="3.8" fill="#1E293B"/>
+                    <circle cx="67.2" cy="90.8" r="1.4" fill="#FFFFFF"/>
+                    <circle cx="86" cy="92" r="3.8" fill="#1E293B"/>
+                    <circle cx="87.2" cy="90.8" r="1.4" fill="#FFFFFF"/>
+                    <ellipse cx="58" cy="100" rx="4.5" ry="2.8" fill="#FDA4AF"/>
+                    <ellipse cx="94" cy="100" rx="4.5" ry="2.8" fill="#FDA4AF"/>
+                    <path d="M68 104C72 110 80 110 84 104" stroke="#1E293B" stroke-width="2.8" stroke-linecap="round"/>
+
+                    <!-- Siti Memegang Wang Kertas RM20 (Oren Keemasan Malaysia) -->
+                    <rect x="64" y="132" width="68" height="32" rx="6" transform="rotate(-4 64 132)" fill="#FB923C" stroke="#C2410C" stroke-width="2.5"/>
+                    <rect x="69" y="136" width="58" height="24" rx="4" transform="rotate(-4 69 136)" fill="#FDBA74" stroke="#EA580C" stroke-width="1.5"/>
+                    <circle cx="114" cy="147" r="7" fill="#FED7AA" stroke="#C2410C" stroke-width="1.2"/>
+                    <text x="89" y="152" text-anchor="middle" transform="rotate(-4 89 152)" fill="#7C2D12" font-family="Fredoka" font-weight="bold" font-size="14">RM20</text>
+                    <!-- Tangan Comel Siti -->
+                    <circle cx="65" cy="148" r="6" fill="#FDE68A" stroke="#D97706" stroke-width="1.8"/>
+                    <circle cx="131" cy="144" r="6" fill="#FDE68A" stroke="#D97706" stroke-width="1.8"/>
+
+                    <!-- Bekas Makanan Warna-warni dengan Corak Comel -->
+                    <ellipse cx="212" cy="164" rx="46" ry="6" fill="#000000" fill-opacity="0.16"/>
+                    <!-- Pemegang Atas -->
+                    <path d="M196 108V101C196 98 228 98 228 101V108" stroke="#0284C7" stroke-width="5" stroke-linecap="round"/>
+                    <!-- Badan Bekas Makanan -->
+                    <rect x="168" y="114" width="88" height="48" rx="14" fill="#F43F5E" stroke="#BE123C" stroke-width="2.5"/>
+                    <!-- Penutup Bekas Makanan -->
+                    <rect x="164" y="106" width="96" height="14" rx="7" fill="#38BDF8" stroke="#0369A1" stroke-width="2.5"/>
+                    <!-- Klip Sisi -->
+                    <rect x="163" y="118" width="7" height="14" rx="3" fill="#FACC15" stroke="#B45309" stroke-width="1.5"/>
+                    <rect x="254" y="118" width="7" height="14" rx="3" fill="#FACC15" stroke="#B45309" stroke-width="1.5"/>
+                    <!-- Corak Comel (Arnab & Bunga) pada Bekas Makanan -->
+                    <ellipse cx="206" cy="128" rx="3" ry="7" fill="#FFFFFF"/>
+                    <ellipse cx="218" cy="128" rx="3" ry="7" fill="#FFFFFF"/>
+                    <circle cx="212" cy="141" r="11" fill="#FFFFFF"/>
+                    <circle cx="208" cy="139" r="1.8" fill="#1E293B"/>
+                    <circle cx="216" cy="139" r="1.8" fill="#1E293B"/>
+                    <circle cx="212" cy="142" r="2" fill="#FB7185"/>
+                    <!-- Bunga Hiasan Kecil -->
+                    <circle cx="185" cy="134" r="4" fill="#FDE047"/>
+                    <circle cx="188" cy="148" r="3.5" fill="#86EFAC"/>
+                    <circle cx="239" cy="134" r="4" fill="#FDE047"/>
+                    <circle cx="236" cy="148" r="3.5" fill="#86EFAC"/>
+
+                    <!-- Tanda Harga Bekas Makanan: RM14 -->
+                    <line x1="212" y1="84" x2="212" y2="99" stroke="#64748B" stroke-width="3.5"/>
+                    <rect x="180" y="54" width="64" height="32" rx="9" fill="#FFFFFF" stroke="#EF4444" stroke-width="3"/>
+                    <text x="212" y="76" text-anchor="middle" fill="#1E293B" font-family="Fredoka" font-weight="bold" font-size="18">RM14</text>
+                </svg>`
+            },
+            {
+                id: 3,
+                numberLabel: "Kes 3",
+                title: "Pembelian Hakim",
+                shortDesc: "Jumlahkan harga susu, roti dan telur yang dibeli Hakim.",
+                scenario: "Hakim membeli sekotak susu berharga RM4, sebuku roti berharga RM5 dan sebekas telur berharga RM7.",
+                question: "Berapakah jumlah harga semua barang yang dibeli oleh Hakim?",
+                options: [
+                    { key: "A", text: "RM14" },
+                    { key: "B", text: "RM15" },
+                    { key: "C", text: "RM16" },
+                    { key: "D", text: "RM17" }
+                ],
+                correctAnswer: "C",
+                calculation: "RM4 + RM5 + RM7 = RM16",
+                correctFeedback: "Tahniah! Kamu berjaya menjumlahkan harga ketiga-tiga barang dengan betul.",
+                incorrectFeedback: "Cuba kira semula. Pastikan kamu menambah harga susu, roti dan telur.",
+                caption: "Susu (RM4), Roti (RM5) dan Telur (RM7)",
+                svg: `
+                <svg viewBox="0 0 260 210" class="w-full h-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="260" height="210" rx="20" fill="#DCFCE7"/>
+                    <!-- Meja Pasar Raya -->
+                    <rect x="20" y="155" width="220" height="14" rx="6" fill="#16A34A"/>
+                    <!-- Sekotak Susu RM4 -->
+                    <rect x="35" y="88" width="44" height="62" rx="6" fill="#FFFFFF" stroke="#0284C7" stroke-width="3"/>
+                    <rect x="35" y="106" width="44" height="22" fill="#38BDF8"/>
+                    <rect x="35" y="56" width="44" height="22" rx="6" fill="#FACC15" stroke="#CA8A04" stroke-width="2"/>
+                    <text x="57" y="71" text-anchor="middle" fill="#713F12" font-family="Fredoka" font-weight="bold" font-size="13">RM4</text>
+                    <!-- Sebuku Roti RM5 -->
+                    <rect x="102" y="104" width="56" height="46" rx="14" fill="#F59E0B" stroke="#B45309" stroke-width="3"/>
+                    <path d="M114 104V120M130 104V120M146 104V120" stroke="#B45309" stroke-width="2.5" stroke-linecap="round"/>
+                    <rect x="108" y="68" width="44" height="22" rx="6" fill="#FACC15" stroke="#CA8A04" stroke-width="2"/>
+                    <text x="130" y="83" text-anchor="middle" fill="#713F12" font-family="Fredoka" font-weight="bold" font-size="13">RM5</text>
+                    <!-- Sebekas Telur RM7 -->
+                    <rect x="178" y="118" width="54" height="32" rx="8" fill="#E2E8F0" stroke="#64748B" stroke-width="3"/>
+                    <circle cx="192" cy="116" r="8" fill="#FEF3C7" stroke="#D97706" stroke-width="2"/>
+                    <circle cx="205" cy="116" r="8" fill="#FEF3C7" stroke="#D97706" stroke-width="2"/>
+                    <circle cx="218" cy="116" r="8" fill="#FEF3C7" stroke="#D97706" stroke-width="2"/>
+                    <rect x="183" y="76" width="44" height="22" rx="6" fill="#FACC15" stroke="#CA8A04" stroke-width="2"/>
+                    <text x="205" y="91" text-anchor="middle" fill="#713F12" font-family="Fredoka" font-weight="bold" font-size="13">RM7</text>
+                </svg>`
+            },
+            {
+                id: 4,
+                numberLabel: "Kes 4",
+                title: "Bajet Aina",
+                shortDesc: "Kira baki bajet RM30 Aina selepas membeli 3 barang.",
+                scenario: "Aina mempunyai bajet sebanyak RM30. Dia membeli buah-buahan berharga RM8, sebuku roti berharga RM5 dan sekotak susu berharga RM4.",
+                question: "Berapakah baki wang Aina selepas membeli semua barang tersebut?",
+                options: [
+                    { key: "A", text: "RM11" },
+                    { key: "B", text: "RM12" },
+                    { key: "C", text: "RM13" },
+                    { key: "D", text: "RM15" }
+                ],
+                correctAnswer: "C",
+                calculation: "RM8 + RM5 + RM4 = RM17\nRM30 - RM17 = RM13",
+                correctFeedback: "Bagus sekali! Jumlah pembelian ialah RM17 dan baki wang Aina ialah RM13.",
+                incorrectFeedback: "Cuba jumlahkan semua harga barang dahulu. Selepas itu, tolak jumlah pembelian daripada RM30.",
+                caption: "Bajet RM30: Buah (RM8), Roti (RM5) & Susu (RM4)",
+                svg: `
+                <svg viewBox="0 0 260 210" class="w-full h-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="260" height="210" rx="20" fill="#FEF3C7"/>
+                    <!-- Papan Bajet Aina -->
+                    <rect x="18" y="16" width="110" height="32" rx="10" fill="#10B981" stroke="#047857" stroke-width="2.5"/>
+                    <text x="73" y="37" text-anchor="middle" fill="white" font-family="Fredoka" font-weight="bold" font-size="15">Bajet: RM30</text>
+                    <!-- Buah-buahan RM8 -->
+                    <circle cx="52" cy="135" r="16" fill="#EF4444"/>
+                    <path d="M52 119C54 113 60 113 60 117" stroke="#15803D" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M68 142C75 130 88 128 92 138C86 148 74 148 68 142Z" fill="#FACC15" stroke="#CA8A04" stroke-width="2"/>
+                    <rect x="38" y="84" width="46" height="22" rx="6" fill="#FACC15" stroke="#CA8A04" stroke-width="2"/>
+                    <text x="61" y="99" text-anchor="middle" fill="#713F12" font-family="Fredoka" font-weight="bold" font-size="13">RM8</text>
+                    <!-- Roti RM5 -->
+                    <rect x="108" y="114" width="52" height="38" rx="12" fill="#F59E0B" stroke="#B45309" stroke-width="3"/>
+                    <rect x="112" y="84" width="44" height="22" rx="6" fill="#FACC15" stroke="#CA8A04" stroke-width="2"/>
+                    <text x="134" y="99" text-anchor="middle" fill="#713F12" font-family="Fredoka" font-weight="bold" font-size="13">RM5</text>
+                    <!-- Susu RM4 -->
+                    <rect x="180" y="102" width="42" height="50" rx="6" fill="#FFFFFF" stroke="#0284C7" stroke-width="3"/>
+                    <rect x="180" y="116" width="42" height="18" fill="#38BDF8"/>
+                    <rect x="179" y="72" width="44" height="22" rx="6" fill="#FACC15" stroke="#CA8A04" stroke-width="2"/>
+                    <text x="201" y="87" text-anchor="middle" fill="#713F12" font-family="Fredoka" font-weight="bold" font-size="13">RM4</text>
+                    <!-- Garis Lantai -->
+                    <rect x="20" y="154" width="220" height="12" rx="6" fill="#D97706"/>
+                </svg>`
+            },
+            {
+                id: 5,
+                numberLabel: "Kes 5",
+                title: "Cabaran Danish",
+                shortDesc: "Siasat wang RM40 Danish untuk beg sekolah & botol air.",
+                scenario: "Danish mempunyai wang sebanyak RM40. Dia ingin membeli sebuah beg sekolah berharga RM28 dan sebotol air berharga RM9.",
+                question: "Adakah wang Danish mencukupi? Berapakah baki wangnya selepas membeli kedua-dua barang?",
+                options: [
+                    { key: "A", text: "Tidak cukup, kurang RM3." },
+                    { key: "B", text: "Ya, baki RM2." },
+                    { key: "C", text: "Ya, baki RM3." },
+                    { key: "D", text: "Ya, baki RM5." }
+                ],
+                correctAnswer: "C",
+                calculation: "RM28 + RM9 = RM37\nRM40 - RM37 = RM3",
+                correctFeedback: "Hebat, Detektif Cilik! Wang Danish mencukupi dan bakinya ialah RM3. Kamu berjaya menyelesaikan kes terakhir!",
+                incorrectFeedback: "Hampir berjaya! Jumlahkan harga beg dan botol air dahulu. Kemudian, bandingkan dengan wang Danish.",
+                caption: "Wang RM40: Beg Sekolah (RM28) & Botol Air (RM9)",
+                svg: `
+                <svg viewBox="0 0 260 210" class="w-full h-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="260" height="210" rx="20" fill="#E0E7FF"/>
+                    <!-- Wang Danish RM40 -->
+                    <rect x="20" y="20" width="96" height="32" rx="10" fill="#6366F1" stroke="#3730A3" stroke-width="2.5"/>
+                    <text x="68" y="41" text-anchor="middle" fill="white" font-family="Fredoka" font-weight="bold" font-size="15">Wang: RM40</text>
+                    <!-- Beg Sekolah RM28 -->
+                    <rect x="42" y="92" width="64" height="68" rx="16" fill="#EF4444" stroke="#991B1B" stroke-width="3"/>
+                    <rect x="54" y="122" width="40" height="28" rx="8" fill="#FCA5A5" stroke="#991B1B" stroke-width="2"/>
+                    <path d="M62 92V82C62 76 86 76 86 82V92" stroke="#991B1B" stroke-width="4"/>
+                    <rect x="50" y="56" width="48" height="22" rx="6" fill="#FACC15" stroke="#CA8A04" stroke-width="2"/>
+                    <text x="74" y="71" text-anchor="middle" fill="#713F12" font-family="Fredoka" font-weight="bold" font-size="13">RM28</text>
+                    <!-- Botol Air RM9 -->
+                    <rect x="136" y="102" width="32" height="58" rx="8" fill="#06B6D4" stroke="#0E7490" stroke-width="3"/>
+                    <rect x="144" y="90" width="16" height="12" rx="3" fill="#FACC15" stroke="#0E7490" stroke-width="2"/>
+                    <rect x="130" y="62" width="44" height="22" rx="6" fill="#FACC15" stroke="#CA8A04" stroke-width="2"/>
+                    <text x="152" y="77" text-anchor="middle" fill="#713F12" font-family="Fredoka" font-weight="bold" font-size="13">RM9</text>
+                    <!-- Kalkulator Kecil -->
+                    <rect x="190" y="98" width="46" height="62" rx="8" fill="#334155" stroke="#0F172A" stroke-width="3"/>
+                    <rect x="197" y="106" width="32" height="14" rx="3" fill="#A7F3D0"/>
+                    <circle cx="203" cy="130" r="3" fill="#94A3B8"/>
+                    <circle cx="213" cy="130" r="3" fill="#94A3B8"/>
+                    <circle cx="223" cy="130" r="3" fill="#F59E0B"/>
+                    <circle cx="203" cy="142" r="3" fill="#94A3B8"/>
+                    <circle cx="213" cy="142" r="3" fill="#94A3B8"/>
+                    <circle cx="223" cy="142" r="3" fill="#10B981"/>
+                </svg>`
+            }
+        ];
+
+        // Keadaan Aplikasi (Local State)
+        const appState = {
+            currentScreen: 'welcome',
+            currentCaseIndex: 0, // 0 hingga 4
+            completedCases: [false, false, false, false, false],
+            score: 0,
+            selectedOption: null,
+            soundEnabled: true
+        };
+
+        // ==========================================
+        // SISTEM KESAN BUNYI (TONE.JS)
+        // ==========================================
+        let synth = null;
+
+        function initAudio() {
+            if (!synth && typeof Tone !== 'undefined') {
+                synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                synth.volume.value = -6;
+            }
+        }
+
+        function playSound(type) {
+            if (!appState.soundEnabled) return;
+            try {
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+                initAudio();
+                if (!synth) return;
+
+                const now = Tone.now();
+                if (type === 'click') {
+                    synth.triggerAttackRelease("C5", "32n", now);
+                } else if (type === 'correct') {
+                    // Bunyi kejayaan ceria
+                    synth.triggerAttackRelease("C5", "16n", now);
+                    synth.triggerAttackRelease("E5", "16n", now + 0.1);
+                    synth.triggerAttackRelease("G5", "16n", now + 0.2);
+                    synth.triggerAttackRelease("C6", "8n", now + 0.3);
+                } else if (type === 'incorrect') {
+                    // Bunyi lembut mencuba semula
+                    synth.triggerAttackRelease("E4", "8n", now);
+                    synth.triggerAttackRelease("C4", "4n", now + 0.15);
+                } else if (type === 'victory') {
+                    // Fanfare kemenangan tamat 5 kes
+                    const notes = ["C5", "E5", "G5", "C6", "G5", "C6"];
+                    const times = [0, 0.12, 0.24, 0.36, 0.55, 0.7];
+                    notes.forEach((note, idx) => {
+                        synth.triggerAttackRelease(note, "8n", now + times[idx]);
+                    });
+                }
+            } catch (e) {
+                // Abaikan ralat audio jika pelayar menyekat autoplay
+            }
+        }
+
+        function toggleSound() {
+            appState.soundEnabled = !appState.soundEnabled;
+            const icon = appState.soundEnabled ? "🔊" : "🔇";
+            const text = appState.soundEnabled ? "Bunyi: Hidup" : "Bunyi: Senyap";
+
+            document.getElementById('sound-icon').textContent = icon;
+            document.getElementById('sound-text').textContent = text;
+            
+            document.querySelectorAll('.sound-icon-sync').forEach(el => el.textContent = icon);
+            document.querySelectorAll('.sound-text-sync').forEach(el => el.textContent = text);
+
+            if (appState.soundEnabled) playSound('click');
+        }
+
+        // ==========================================
+        // NAVIGASI SKRIN & KEMASKINI UI
+        // ==========================================
+        function updateHeaderStats() {
+            const completedCount = appState.completedCases.filter(Boolean).length;
+            document.getElementById('header-progress').textContent = `${completedCount} daripada 5 kes selesai`;
+            document.getElementById('header-score').textContent = `${appState.score} / 500`;
+        }
+
+        function navigateTo(screenName) {
+            playSound('click');
+            appState.currentScreen = screenName;
+
+            // Sembunyikan semua skrin
+            ['welcome', 'map', 'challenge', 'celebration'].forEach(id => {
+                document.getElementById(`screen-${id}`).classList.add('hidden');
+            });
+
+            // Kawal paparan bar atas
+            const topBar = document.getElementById('top-bar');
+            if (screenName === 'welcome') {
+                topBar.classList.add('hidden');
+            } else {
+                topBar.classList.remove('hidden');
+            }
+
+            // Paparkan skrin sasaran
+            document.getElementById(`screen-${screenName}`).classList.remove('hidden');
+            updateHeaderStats();
+
+            if (screenName === 'map') {
+                renderMapScreen();
+            } else if (screenName === 'challenge') {
+                renderChallengeScreen(appState.currentCaseIndex);
+            } else if (screenName === 'celebration') {
+                renderCelebrationScreen();
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function startMission() {
+            if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+                Tone.start();
+            }
+            navigateTo('map');
+        }
+
+        // ==========================================
+        // SKRIN 2: PAPAN SIASATAN (MAP)
+        // ==========================================
+        function renderMapScreen() {
+            const grid = document.getElementById('cases-grid');
+            grid.innerHTML = '';
+
+            const completedCount = appState.completedCases.filter(Boolean).length;
+            const nextUnlockedIndex = completedCount; // Murid mesti selesaikan mengikut urutan
+
+            CASES_DATA.forEach((caseItem, index) => {
+                const isCompleted = appState.completedCases[index];
+                const isUnlocked = index <= nextUnlockedIndex;
+                const isCurrent = index === nextUnlockedIndex && !isCompleted;
+
+                let cardStyle = '';
+                let badgeHtml = '';
+                let buttonHtml = '';
+
+                if (isCompleted) {
+                    cardStyle = 'bg-pastelGreen/80 border-emerald-400 hover:scale-[1.02] cursor-pointer';
+                    badgeHtml = `<span class="bg-emerald-500 text-white text-xs sm:text-sm font-display font-bold px-3 py-1 rounded-full flex items-center gap-1">✅ Selesai (+100)</span>`;
+                    buttonHtml = `<button onclick="openCase(${index})" class="w-full mt-4 bg-emerald-500 hover:bg-emerald-600 text-white font-display font-bold py-2.5 px-4 rounded-xl border-2 border-emerald-700 transition">Semak Semula Kes</button>`;
+                } else if (isCurrent) {
+                    cardStyle = 'bg-pastelYellow border-amber-400 ring-4 ring-amber-200 hover:scale-[1.02] cursor-pointer';
+                    badgeHtml = `<span class="bg-amber-500 text-white text-xs sm:text-sm font-display font-bold px-3 py-1 rounded-full animate-pulse">🔍 Sedia Disiasat</span>`;
+                    buttonHtml = `<button onclick="openCase(${index})" class="btn-3d w-full mt-4 bg-amber-500 hover:bg-amber-600 text-white font-display font-bold py-3 px-4 rounded-xl border-2 border-amber-700 transition">MULA SIASAT ➡️</button>`;
+                } else {
+                    cardStyle = 'bg-slate-100 border-slate-300 opacity-75 cursor-not-allowed';
+                    badgeHtml = `<span class="bg-slate-400 text-white text-xs sm:text-sm font-display font-bold px-3 py-1 rounded-full">🔒 Terkunci</span>`;
+                    buttonHtml = `<button disabled class="w-full mt-4 bg-slate-300 text-slate-600 font-display font-bold py-2.5 px-4 rounded-xl border-2 border-slate-400 cursor-not-allowed">Selesaikan Kes ${index} Dahulu</button>`;
+                }
+
+                const card = document.createElement('div');
+                card.className = `rounded-3xl border-4 p-5 flex flex-col justify-between transition-all duration-200 shadow-sm ${cardStyle}`;
+                if (isUnlocked) {
+                    card.onclick = (e) => {
+                        if (e.target.tagName !== 'BUTTON') openCase(index);
+                    };
+                }
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between gap-2 mb-3">
+                            <span class="font-display font-bold text-lg text-detectiveNavy bg-white px-3 py-1 rounded-xl border-2 border-sky-200">
+                                ${caseItem.numberLabel}
+                            </span>
+                            ${badgeHtml}
+                        </div>
+                        <h3 class="text-xl sm:text-2xl font-bold text-slate-900 mb-2">
+                            ${caseItem.numberLabel} – ${caseItem.title}
+                        </h3>
+                        <p class="text-sm sm:text-base font-bold text-slate-700 leading-snug">
+                            ${caseItem.shortDesc}
+                        </p>
+                    </div>
+                    ${buttonHtml}
+                `;
+
+                grid.appendChild(card);
+            });
+
+            // Kemaskini mesej pembantu & sepanduk perayaan
+            const assistantMsg = document.getElementById('map-assistant-msg');
+            const celebBanner = document.getElementById('map-celebration-banner');
+
+            if (completedCount === 5) {
+                assistantMsg.textContent = "Luar biasa! Kelima-lima kes telah berjaya kamu selesaikan!";
+                celebBanner.classList.remove('hidden');
+            } else {
+                assistantMsg.textContent = `Seterusnya: Siasat ${CASES_DATA[nextUnlockedIndex].numberLabel} – ${CASES_DATA[nextUnlockedIndex].title}!`;
+                celebBanner.classList.add('hidden');
+            }
+        }
+
+        function openCase(index) {
+            appState.currentCaseIndex = index;
+            navigateTo('challenge');
+        }
+
+        // ==========================================
+        // SKRIN 3: CABARAN SIASATAN (CHALLENGE)
+        // ==========================================
+        function renderChallengeScreen(index) {
+            const caseData = CASES_DATA[index];
+            const isAlreadyCompleted = appState.completedCases[index];
+
+            // Tetapkan pilihan semasa (jika sudah selesai, tunjukkan jawapan betul)
+            appState.selectedOption = isAlreadyCompleted ? caseData.correctAnswer : null;
+
+            // Kemaskini teks & ilustrasi
+            document.getElementById('challenge-badge').textContent = caseData.numberLabel.toUpperCase();
+            document.getElementById('challenge-title').textContent = caseData.title;
+            document.getElementById('challenge-illustration').innerHTML = caseData.svg;
+            document.getElementById('challenge-caption').textContent = caseData.caption;
+            document.getElementById('challenge-scenario').textContent = caseData.scenario;
+            document.getElementById('challenge-question').textContent = caseData.question;
+
+            const statusPill = document.getElementById('challenge-status-pill');
+            if (isAlreadyCompleted) {
+                statusPill.textContent = "Kes Selesai ✅";
+                statusPill.className = "bg-emerald-100 text-emerald-900 font-bold text-sm px-4 py-1.5 rounded-full border-2 border-emerald-400";
+            } else {
+                statusPill.textContent = `Kes ${index + 1} daripada 5 🔍`;
+                statusPill.className = "bg-sky-100 text-sky-900 font-bold text-sm px-4 py-1.5 rounded-full border-2 border-sky-300";
+            }
+
+            // Jana 4 butang pilihan jawapan
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            caseData.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.id = `option-btn-${opt.key}`;
+                btn.type = 'button';
+                btn.onclick = () => selectOption(opt.key);
+                
+                btn.className = "option-card text-left p-4 rounded-2xl border-4 font-bold text-base sm:text-lg transition-all flex items-center gap-3 bg-slate-50 border-slate-300 hover:border-sky-400 hover:bg-sky-50 cursor-pointer";
+                
+                btn.innerHTML = `
+                    <span class="option-letter w-10 h-10 rounded-xl bg-white border-2 border-slate-300 flex items-center justify-center font-display font-bold text-lg text-detectiveNavy shrink-0">
+                        ${opt.key}
+                    </span>
+                    <span class="text-slate-800 leading-snug">${opt.text}</span>
+                `;
+                optionsContainer.appendChild(btn);
+            });
+
+            // Tetapkan semula kotak maklum balas & butang semak
+            const feedbackBox = document.getElementById('feedback-box');
+            const submitBtn = document.getElementById('btn-submit-answer');
+            const nextContainer = document.getElementById('next-action-container');
+
+            if (isAlreadyCompleted) {
+                highlightSelectedOption(caseData.correctAnswer, 'correct');
+                submitBtn.disabled = true;
+                submitBtn.classList.add('hidden');
+                showFeedback(true, caseData);
+            } else {
+                feedbackBox.classList.add('hidden');
+                nextContainer.classList.add('hidden');
+                submitBtn.classList.remove('hidden');
+                submitBtn.disabled = true;
+            }
+        }
+
+        function selectOption(optionKey) {
+            const index = appState.currentCaseIndex;
+            // Jika kes sudah selesai dengan betul, jangan benarkan tukar jawapan
+            if (appState.completedCases[index]) return;
+
+            playSound('click');
+            appState.selectedOption = optionKey;
+
+            // Sembunyikan maklum balas salah sebelumnya apabila murid memilih semula
+            document.getElementById('feedback-box').classList.add('hidden');
+
+            highlightSelectedOption(optionKey, 'selected');
+
+            // Aktifkan butang Semak Jawapan
+            const submitBtn = document.getElementById('btn-submit-answer');
+            submitBtn.disabled = false;
+        }
+
+        function highlightSelectedOption(selectedKey, mode) {
+            const allBtns = document.querySelectorAll('.option-card');
+            allBtns.forEach(btn => {
+                const key = btn.id.replace('option-btn-', '');
+                const letterBadge = btn.querySelector('.option-letter');
+
+                // Reset gaya asal
+                btn.className = "option-card text-left p-4 rounded-2xl border-4 font-bold text-base sm:text-lg transition-all flex items-center gap-3 bg-slate-50 border-slate-300 hover:border-sky-400 hover:bg-sky-50 cursor-pointer";
+                letterBadge.className = "option-letter w-10 h-10 rounded-xl bg-white border-2 border-slate-300 flex items-center justify-center font-display font-bold text-lg text-detectiveNavy shrink-0";
+
+                if (key === selectedKey) {
+                    if (mode === 'selected') {
+                        btn.className = "option-card text-left p-4 rounded-2xl border-4 font-bold text-base sm:text-lg transition-all flex items-center gap-3 bg-sky-100 border-sky-500 ring-4 ring-sky-200 cursor-pointer";
+                        letterBadge.className = "option-letter w-10 h-10 rounded-xl bg-sky-500 border-2 border-sky-600 flex items-center justify-center font-display font-bold text-lg text-white shrink-0";
+                    } else if (mode === 'correct') {
+                        btn.className = "option-card text-left p-4 rounded-2xl border-4 font-bold text-base sm:text-lg transition-all flex items-center gap-3 bg-emerald-100 border-emerald-500 ring-4 ring-emerald-200";
+                        letterBadge.className = "option-letter w-10 h-10 rounded-xl bg-emerald-500 border-2 border-emerald-600 flex items-center justify-center font-display font-bold text-lg text-white shrink-0";
+                    } else if (mode === 'incorrect') {
+                        btn.className = "option-card animate-wiggle text-left p-4 rounded-2xl border-4 font-bold text-base sm:text-lg transition-all flex items-center gap-3 bg-rose-100 border-rose-500";
+                        letterBadge.className = "option-letter w-10 h-10 rounded-xl bg-rose-500 border-2 border-rose-600 flex items-center justify-center font-display font-bold text-lg text-white shrink-0";
+                    }
+                }
+            });
+        }
+
+        function checkAnswer() {
+            const index = appState.currentCaseIndex;
+            const caseData = CASES_DATA[index];
+            const chosen = appState.selectedOption;
+
+            if (!chosen) return;
+
+            const isCorrect = (chosen === caseData.correctAnswer);
+
+            if (isCorrect) {
+                playSound('correct');
+                highlightSelectedOption(chosen, 'correct');
+
+                // Tambah markah 100 hanya jika kes ini belum pernah diselesaikan
+                if (!appState.completedCases[index]) {
+                    appState.completedCases[index] = true;
+                    appState.score += 100;
+                    updateHeaderStats();
+                }
+
+                // Kemaskini lencana status
+                const statusPill = document.getElementById('challenge-status-pill');
+                statusPill.textContent = "Kes Selesai ✅ (+100 Markah)";
+                statusPill.className = "bg-emerald-100 text-emerald-900 font-bold text-sm px-4 py-1.5 rounded-full border-2 border-emerald-400";
+
+                // Sembunyikan butang semak jawapan
+                document.getElementById('btn-submit-answer').classList.add('hidden');
+                
+                showFeedback(true, caseData);
+            } else {
+                playSound('incorrect');
+                highlightSelectedOption(chosen, 'incorrect');
+                showFeedback(false, caseData);
+            }
+        }
+
+        function showFeedback(isCorrect, caseData) {
+            const feedbackBox = document.getElementById('feedback-box');
+            const feedbackIcon = document.getElementById('feedback-icon');
+            const feedbackHeading = document.getElementById('feedback-heading');
+            const feedbackEncouragement = document.getElementById('feedback-encouragement');
+            const feedbackTextWrapper = document.getElementById('feedback-text-wrapper');
+            const feedbackText = document.getElementById('feedback-text');
+            const calcBox = document.getElementById('calculation-box');
+            const calcSteps = document.getElementById('calculation-steps');
+            const nextContainer = document.getElementById('next-action-container');
+            const nextBtnText = document.getElementById('btn-next-text');
+
+            feedbackBox.classList.remove(
+                'hidden',
+                'bg-emerald-100', 'border-emerald-400', 'text-emerald-950',
+                'bg-purple-50', 'border-purple-300', 'text-purple-950'
+            );
+
+            if (isCorrect) {
+                feedbackBox.classList.add('bg-emerald-100', 'border-emerald-400', 'text-emerald-950');
+                feedbackIcon.innerHTML = `<span class="text-4xl block">🎉</span>`;
+                feedbackHeading.className = "font-display font-bold text-xl sm:text-2xl mb-1 text-emerald-900";
+                feedbackHeading.textContent = "Jawapan Tepat!";
+                feedbackEncouragement.classList.add('hidden');
+                feedbackTextWrapper.className = "";
+                feedbackText.className = "font-bold text-base sm:text-lg leading-snug text-emerald-950";
+                feedbackText.textContent = caseData.correctFeedback;
+
+                // Paparkan jalan pengiraan
+                calcBox.classList.remove('hidden');
+                calcSteps.innerHTML = caseData.calculation.replace('\n', '<br>');
+
+                // Paparkan butang seterusnya
+                nextContainer.classList.remove('hidden');
+                if (appState.currentCaseIndex < CASES_DATA.length - 1) {
+                    nextBtnText.textContent = `KE KES ${appState.currentCaseIndex + 2} ➡️`;
+                } else {
+                    nextBtnText.textContent = "🏆 TAMATKAN MISI";
+                }
+            } else {
+                feedbackBox.classList.add('bg-purple-50', 'border-purple-300', 'text-purple-950');
+                // Maskot Detektif Mesra dengan Bintang & Kilauan
+                feedbackIcon.innerHTML = `
+                <svg class="w-24 h-24 sm:w-28 sm:h-28 mx-auto drop-shadow-sm" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="60" cy="64" r="46" fill="#FEF9C3" stroke="#FDE047" stroke-width="2.5"/>
+                    <!-- Bintang & Kilauan Galakan -->
+                    <path d="M18 32L20.5 38L27 38.5L22 43L23.5 49.5L18 46L12.5 49.5L14 43L9 38.5L15.5 38L18 32Z" fill="#FACC15"/>
+                    <path d="M102 26L104 31L109.5 31.5L105.5 35L106.5 40.5L102 37.5L97.5 40.5L98.5 35L94.5 31.5L100 31L102 26Z" fill="#38BDF8"/>
+                    <circle cx="98" cy="88" r="4" fill="#4ADE80"/>
+                    <circle cx="22" cy="86" r="3.5" fill="#C084FC"/>
+                    <!-- Badan Kot Detektif -->
+                    <path d="M32 106C32 88 44 80 60 80C76 80 88 88 88 106" fill="#D97706"/>
+                    <path d="M50 80L60 95L70 80" fill="#FEF3C7"/>
+                    <!-- Kepala Maskot -->
+                    <circle cx="60" cy="58" r="23" fill="#FDE68A"/>
+                    <!-- Mata Ceria & Senyuman Memberi Semangat -->
+                    <path d="M48 56C50 52 54 52 56 56" stroke="#1E293B" stroke-width="2.8" stroke-linecap="round"/>
+                    <path d="M64 56C66 52 70 52 72 56" stroke="#1E293B" stroke-width="2.8" stroke-linecap="round"/>
+                    <ellipse cx="45" cy="62" rx="3.5" ry="2" fill="#FDA4AF"/>
+                    <ellipse cx="75" cy="62" rx="3.5" ry="2" fill="#FDA4AF"/>
+                    <path d="M53 65C55 71 65 71 67 65H53Z" fill="#F43F5E" stroke="#1E293B" stroke-width="1.8"/>
+                    <!-- Topi Detektif -->
+                    <path d="M35 43C35 29 46 21 60 21C74 21 85 29 85 43H35Z" fill="#92400E"/>
+                    <ellipse cx="60" cy="43" rx="34" ry="6.5" fill="#78350F"/>
+                    <rect x="37" y="37" width="46" height="4.5" rx="2" fill="#FACC15"/>
+                    <!-- Kanta Pembesar -->
+                    <line x1="84" y1="84" x2="96" y2="97" stroke="#78350F" stroke-width="5" stroke-linecap="round"/>
+                    <circle cx="79" cy="78" r="12" fill="#E0F2FE" stroke="#0284C7" stroke-width="3.5"/>
+                    <path d="M74 74C76 71 79 70 82 72" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+                </svg>`;
+
+                feedbackHeading.className = "inline-block bg-purple-600 text-white font-display font-bold text-lg sm:text-xl px-4 py-1.5 rounded-2xl shadow-sm mb-2";
+                feedbackHeading.textContent = "Hampir Berjaya, Detektif Cilik! 💪✨";
+
+                feedbackEncouragement.classList.remove('hidden');
+                feedbackEncouragement.textContent = "Bagus usaha kamu! Jangan putus asa. Cuba fikir dan kira sekali lagi. Kamu pasti boleh!";
+
+                feedbackTextWrapper.className = "bg-amber-100/90 border-2 border-amber-300 rounded-2xl p-3.5 text-slate-900";
+                feedbackText.className = "font-bold text-base sm:text-lg leading-snug text-slate-900";
+                feedbackText.innerHTML = `<span class="text-amber-700 font-extrabold">💡 Petunjuk:</span> ${caseData.incorrectFeedback}`;
+
+                // Jangan dedahkan jawapan betul atau langkah pengiraan penuh sebelum berjaya
+                calcBox.classList.add('hidden');
+                nextContainer.classList.add('hidden');
+            }
+        }
+
+        function goToNextCase() {
+            if (appState.currentCaseIndex < CASES_DATA.length - 1) {
+                appState.currentCaseIndex += 1;
+                navigateTo('challenge');
+            } else {
+                navigateTo('celebration');
+            }
+        }
+
+        // ==========================================
+        // SKRIN 5: PERAYAAN & MODAL PENCAPAIAN
+        // ==========================================
+        function renderCelebrationScreen() {
+            playSound('victory');
+            launchConfetti();
+
+            const completedCount = appState.completedCases.filter(Boolean).length;
+            document.getElementById('final-score-display').textContent = `${appState.score} / 500`;
+            document.getElementById('final-cases-display').textContent = `${completedCount} / 5 Kes`;
+        }
+
+        function openAchievementsModal() {
+            playSound('click');
+            const list = document.getElementById('achievements-list');
+            list.innerHTML = '';
+
+            CASES_DATA.forEach((c, idx) => {
+                const done = appState.completedCases[idx];
+                const item = document.createElement('div');
+                item.className = `flex items-center justify-between p-3.5 rounded-2xl border-2 ${done ? 'bg-emerald-50 border-emerald-300' : 'bg-slate-50 border-slate-200'}`;
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">${done ? '✅' : '⏳'}</span>
+                        <div>
+                            <h4 class="font-display font-bold text-slate-900">${c.numberLabel} – ${c.title}</h4>
+                            <p class="text-xs sm:text-sm font-bold text-slate-600">${c.shortDesc}</p>
+                        </div>
+                    </div>
+                    <span class="font-display font-bold text-sm sm:text-base px-3 py-1 rounded-xl ${done ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-600'}">
+                        ${done ? '+100 Mata' : '0 Mata'}
+                    </span>
+                `;
+                list.appendChild(item);
+            });
+
+            document.getElementById('achievements-modal').classList.remove('hidden');
+        }
+
+        function closeAchievementsModal() {
+            playSound('click');
+            document.getElementById('achievements-modal').classList.add('hidden');
+        }
+
+        function resetMission() {
+            playSound('click');
+            appState.currentCaseIndex = 0;
+            appState.completedCases = [false, false, false, false, false];
+            appState.score = 0;
+            appState.selectedOption = null;
+            updateHeaderStats();
+            navigateTo('welcome');
+        }
+
+        // Kesan Konfeti Ceria untuk Skrin Tamat Misi
+        function launchConfetti() {
+            const colors = ['#FACC15', '#38BDF8', '#4ADE80', '#FB923C', '#F472B6'];
+            for (let i = 0; i < 45; i++) {
+                const conf = document.createElement('div');
+                conf.className = 'confetti-piece';
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                conf.style.animationDelay = (Math.random() * 0.6) + 's';
+                document.body.appendChild(conf);
+                setTimeout(() => conf.remove(), 4500);
+            }
+        }
+    </script>
+</body>
+</html>
